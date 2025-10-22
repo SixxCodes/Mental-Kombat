@@ -15,7 +15,7 @@ public class PlayerAnimation : MonoBehaviour
         // Check if Space key was pressed this frame using the new Input System
         if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
-            Debug.Log("Space pressed!"); // Debug statement
+            Debug.Log("Player: Space key pressed!"); // Debug statement
             animator.SetTrigger("Kick"); // Trigger kick animation
         }
     }
