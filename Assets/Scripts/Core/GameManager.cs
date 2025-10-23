@@ -15,6 +15,13 @@ public class GameManager : MonoBehaviour
     public TMP_Text choiceBText;
     public TMP_Text choiceCText;
     public TMP_Text choiceDText;
+    public GameObject gameOverPanel; // UI panel for "Game Over" message
+
+    [Header("Audio")]
+    public AudioSource sfxSource;
+    public AudioClip kickSound;
+    public AudioClip hitSound;
+    public AudioClip missSound;
 
     [Header("Animators")]
     public Animator playerAnimator;
@@ -22,22 +29,28 @@ public class GameManager : MonoBehaviour
 
     [Header("AI Settings")]
     public bool isAI = true;       // true = Player 2 is AI
-    public int aiDifficulty = 1;   // 1 = Easy, 2 = Medium, 3 = Hard
+    public int aiDifficulty = 2;   // 1 = Easy, 2 = Medium (Default), 3 = Hard
 
     private int correctAnswer;
+    private int questionNumber = 0;
     private bool questionActive = false;
+    private bool gameOver = false;
 
     private int choiceA, choiceB, choiceC, choiceD;
+
+    private Coroutine aiRoutine;
 
     void Start()
     {
         resultText.text = "";
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
         StartNewRound();
     }
 
-    void Update()
+    void Update() // naa dri tanan ang input sa players
     {
-        if (!questionActive) return;
+        if (!questionActive || gameOver) return;
 
         // ✅ Player 1 input (W/A/S/D)
         var keyboard = Keyboard.current;
@@ -60,12 +73,23 @@ public class GameManager : MonoBehaviour
 
     void StartNewRound()
     {
-        // Generate a simple math question
+
+        if (gameOver) return; // stop if game ended
+
+        // stop any leftover AI coroutine from previous round
+        if (aiRoutine != null)
+        {
+            StopCoroutine(aiRoutine);
+            aiRoutine = null;
+        }
+
+        questionNumber++; // count each round. Start 0
+
+        // Generate a simple math question (addition for now)
         int a = Random.Range(1, 10);
         int b = Random.Range(1, 10);
         correctAnswer = a + b;
-
-        questionText.text = $"{a} + {b} = ?";
+        questionText.text = $"{questionNumber}.  {a} + {b} = ?";
 
         // Generate 4 random choices including the correct answer
         choiceA = correctAnswer;
@@ -73,7 +97,7 @@ public class GameManager : MonoBehaviour
         choiceC = Random.Range(1, 20);
         choiceD = Random.Range(1, 20);
 
-        // Shuffle choices (optional)
+        // Shuffle para dli permi A ang correct answer
         ShuffleChoices();
 
         // Update UI
@@ -84,8 +108,9 @@ public class GameManager : MonoBehaviour
 
         questionActive = true;
 
+        // start na ang think if AI, base sa difficulty
         if (isAI)
-            StartCoroutine(AIAnswer());
+            aiRoutine = StartCoroutine(AIAnswer());
     }
 
     void ShuffleChoices()
@@ -106,30 +131,35 @@ public class GameManager : MonoBehaviour
 
     void CheckAnswer(int answer, bool isPlayer1)
     {
-        if (!questionActive) return;
+        if (!questionActive || gameOver) return;
 
         if (answer == correctAnswer)
         {
             if (isPlayer1)
             {
-                resultText.text = "Player 1 hit!";
-                playerAnimator.SetTrigger("Kick");
-                enemyHealth.value -= 10;
+                resultText.text = "Player 1 hit!"; // result text
+                playerAnimator.SetTrigger("Kick"); // trigger kick animation
+                enemyHealth.value -= 10; // reduce enemy health
+                sfxSource.PlayOneShot(kickSound); // play kick sound
             }
             else
             {
                 resultText.text = "Player 2 hit!";
                 enemyAnimator.SetTrigger("Kick");
                 playerHealth.value -= 10;
+                sfxSource.PlayOneShot(kickSound);
             }
         }
         else
         {
             resultText.text = "Miss!";
+            sfxSource.PlayOneShot(missSound);
         }
 
         questionActive = false;
-        Invoke(nameof(StartNewRound), 2f);
+        CheckGameOver(); // ✅ check if someone’s health is 0
+        if (!gameOver)
+            Invoke(nameof(StartNewRound), 1f);
     }
 
     IEnumerator AIAnswer()
@@ -142,18 +172,47 @@ public class GameManager : MonoBehaviour
         resultText.text = "Enemy hit!";
         enemyAnimator.SetTrigger("Kick");
         playerHealth.value -= 10;
+        sfxSource.PlayOneShot(kickSound);
+
         questionActive = false;
-        Invoke(nameof(StartNewRound), 2f);
+        CheckGameOver(); // ✅ check if someone’s health is 0
+        if (!gameOver)
+            Invoke(nameof(StartNewRound), 1f);
+    }
+
+    void CheckGameOver()
+    {
+        if (playerHealth.value <= 0)
+        {
+            EndGame("Player 1 Lost! Enemy Wins!");
+        }
+        else if (enemyHealth.value <= 0)
+        {
+            EndGame("Player 1 Wins!");
+        }
+    }
+
+    void EndGame(string message)
+    {
+        gameOver = true;
+        resultText.text = message;
+
+        if (gameOverPanel != null)
+        {
+            gameOverPanel.SetActive(true);
+            var text = gameOverPanel.GetComponentInChildren<TMP_Text>();
+            if (text != null) text.text = message;
+        }
     }
 
     float GetAITime()
     {
         switch (aiDifficulty)
         {
-            case 1: return Random.Range(5f, 10f);
-            case 2: return Random.Range(3f, 6f);
-            case 3: return Random.Range(1f, 3f);
+            case 1: return Random.Range(5f, 10f); // Easy
+            case 2: return Random.Range(3f, 6f); // Medium
+            case 3: return Random.Range(1f, 3f); // Hard
         }
-        return Random.Range(3f, 6f);
+        return Random.Range(3f, 6f); // Default to Medium
     }
 }
