@@ -1,28 +1,50 @@
-﻿using System.Collections;
-using TMPro;
+﻿/* TO-DOS:
+ * 1. Player Animations [DONE]
+ * 2. Core Gameplay Mechanics [DONE]
+ * 3. Main Menu and Game Over Screens [DONE]
+ * 4. BGM & SFX
+ * 5. GUI Improvements
+ * PUBLISHING
+ * 
+ * Update:
+ * 6. 2nd Player
+ * 7. Pick Characters
+ * 8. Difficulty pick:
+ * -- For AI
+ * -- For Questions
+*/
+
+// ============== IMPORTS  ==================
+using System.Collections;
+using TMPro; // TextMeshPro
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem; // Required for the new Input System
-using UnityEngine.SceneManagement;
+using UnityEngine.SceneManagement; 
 
 public class GameManager : MonoBehaviour
 {
+    // ============== VARIABLES  ==================
     [Header("UI Elements")]
     public TMP_Text questionText;
+
     public TMP_Text resultText;
+
     public Slider playerHealth;
     public Slider enemyHealth;
-    public TMP_Text choiceAText;
+
+    public TMP_Text choiceAText; // Choices
     public TMP_Text choiceBText;
     public TMP_Text choiceCText;
     public TMP_Text choiceDText;
+
     public GameObject gameOverPanel; // UI panel for "Game Over" message
 
     [Header("Audio")]
     public AudioSource sfxSource;
     public AudioClip kickSound;
     public AudioClip hitSound;
-    public AudioClip missSound;
+    public AudioClip missSound; // find other sound kay pang lose jud ni sya
     public AudioClip winSound;
 
     [Header("Animators")]
@@ -33,6 +55,7 @@ public class GameManager : MonoBehaviour
     public bool isAI = true;       // true = Player 2 is AI
     public int aiDifficulty = 2;   // 1 = Easy, 2 = Medium (Default), 3 = Hard
 
+    // Internal variables
     private int correctAnswer;
     private int questionNumber = 0;
     private bool questionActive = false;
@@ -42,19 +65,21 @@ public class GameManager : MonoBehaviour
 
     private Coroutine aiRoutine;
 
+    // ============== CORE GAME  ==================
     void Start()
     {
-        resultText.text = "";
+        resultText.text = ""; // wla pay result sa start
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
         StartNewRound();
     }
 
-    void Update() // naa dri tanan ang input sa players
+    // naa dri tanan: input sa players
+    void Update() 
     {
         if (!questionActive || gameOver) return;
 
-        // ✅ Player 1 input (W/A/S/D)
+        // Player 1 input (W/A/S/D)
         var keyboard = Keyboard.current;
         if (keyboard == null) return;
 
@@ -72,7 +97,6 @@ public class GameManager : MonoBehaviour
             if (keyboard.kKey.wasPressedThisFrame) CheckAnswer(choiceD, false);
         }
     }
-
     void StartNewRound()
     {
 
@@ -164,6 +188,18 @@ public class GameManager : MonoBehaviour
             Invoke(nameof(StartNewRound), 1f);
     }
 
+    // ============== AI ENEMY LOGIC  ==================
+    float GetAITime()
+    {
+        switch (aiDifficulty)
+        {
+            case 1: return Random.Range(5f, 10f); // Easy
+            case 2: return Random.Range(3f, 6f); // Medium
+            case 3: return Random.Range(1f, 3f); // Hard
+        }
+        return Random.Range(3f, 6f); // Default to Medium
+    }
+
     IEnumerator AIAnswer()
     {
         float aiTime = GetAITime();
@@ -182,6 +218,7 @@ public class GameManager : MonoBehaviour
             Invoke(nameof(StartNewRound), 1f);
     }
 
+    // ============== GAME OVER PANEL  ==================
     void CheckGameOver()
     {
         if (playerHealth.value <= 0)
@@ -217,17 +254,6 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    float GetAITime()
-    {
-        switch (aiDifficulty)
-        {
-            case 1: return Random.Range(5f, 10f); // Easy
-            case 2: return Random.Range(3f, 6f); // Medium
-            case 3: return Random.Range(1f, 3f); // Hard
-        }
-        return Random.Range(3f, 6f); // Default to Medium
-    }
-
     public void RetryGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -235,6 +261,6 @@ public class GameManager : MonoBehaviour
 
     public void BackToMenu()
     {
-        SceneManager.LoadScene("MainMenuScene");
+        SceneManager.LoadScene("MainMenuScene"); // Load Assets/Scenes/MainMenuScene.unity
     }
 }

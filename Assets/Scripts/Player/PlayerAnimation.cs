@@ -1,3 +1,5 @@
+// This code is only for animation testing of Player 0
+
 using UnityEngine;
 using UnityEngine.InputSystem; // Required for the new Input System
 

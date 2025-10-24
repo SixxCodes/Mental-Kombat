@@ -1,3 +1,5 @@
+// This code is only for animation testing of AI Enemy
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 

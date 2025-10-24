@@ -1,3 +1,4 @@
+// ============== IMPORTS  ==================
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -5,9 +6,10 @@ public class MainMenuManager : MonoBehaviour
 {
     public void PlayGame()
     {
-        SceneManager.LoadScene("CoreGameScene");
+        SceneManager.LoadScene("CoreGameScene"); // Load Assets/Scenes/CoreGameScene.unity
     }
 
+    // Wla ko nag-add ug quit kay Web game sa mn ni
     //public void QuitGame()
     //{
     //    Debug.Log("Quit Game");
