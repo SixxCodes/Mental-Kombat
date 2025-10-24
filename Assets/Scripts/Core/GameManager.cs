@@ -3,6 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem; // Required for the new Input System
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -22,6 +23,7 @@ public class GameManager : MonoBehaviour
     public AudioClip kickSound;
     public AudioClip hitSound;
     public AudioClip missSound;
+    public AudioClip winSound;
 
     [Header("Animators")]
     public Animator playerAnimator;
@@ -157,7 +159,7 @@ public class GameManager : MonoBehaviour
         }
 
         questionActive = false;
-        CheckGameOver(); // ✅ check if someone’s health is 0
+        CheckGameOver(); // check if someone’s health is 0
         if (!gameOver)
             Invoke(nameof(StartNewRound), 1f);
     }
@@ -175,7 +177,7 @@ public class GameManager : MonoBehaviour
         sfxSource.PlayOneShot(kickSound);
 
         questionActive = false;
-        CheckGameOver(); // ✅ check if someone’s health is 0
+        CheckGameOver(); // check if someone’s health is 0
         if (!gameOver)
             Invoke(nameof(StartNewRound), 1f);
     }
@@ -185,17 +187,27 @@ public class GameManager : MonoBehaviour
         if (playerHealth.value <= 0)
         {
             EndGame("Player 1 Lost! Enemy Wins!");
+            sfxSource.PlayOneShot(missSound);
         }
         else if (enemyHealth.value <= 0)
         {
             EndGame("Player 1 Wins!");
+            sfxSource.PlayOneShot(winSound);
         }
     }
 
     void EndGame(string message)
     {
         gameOver = true;
-        resultText.text = message;
+        resultText.text = "";
+        questionText.text = "";
+        choiceAText.text = "";
+        choiceBText.text = "";
+        choiceCText.text = "";
+        choiceDText.text = "";
+
+        // Add stop game music
+        // Add Win or Lose sound effect
 
         if (gameOverPanel != null)
         {
@@ -214,5 +226,15 @@ public class GameManager : MonoBehaviour
             case 3: return Random.Range(1f, 3f); // Hard
         }
         return Random.Range(3f, 6f); // Default to Medium
+    }
+
+    public void RetryGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
+    public void BackToMenu()
+    {
+        SceneManager.LoadScene("MainMenuScene");
     }
 }
